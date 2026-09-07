@@ -149,19 +149,17 @@
 
     document.getElementById('dateInput').valueAsDate = new Date();
     let myChart = null; 
-    let currentRecords = []; // Database မှ ဒေတာအကုန်
+    let currentRecords = []; 
 
-    // Firebase မှ Data များကို အလိုအလျောက် ရယူခြင်း
     onValue(recordsRef, (snapshot) => {
         currentRecords = [];
         snapshot.forEach((childSnapshot) => {
             currentRecords.push(childSnapshot.val());
         });
-        updateFilterDropdown(); // Dropdown တွင် လများ အလိုအလျောက် ထည့်ပေးရန်
-        applyFilter(); // ရွေးချယ်ထားသောလအလိုက် ပြသရန်
+        updateFilterDropdown(); 
+        applyFilter(); 
     });
 
-    // Dropdown အတွက် သက်ဆိုင်ရာ လများကို ရှာထုတ်ခြင်း
     function updateFilterDropdown() {
         let filterSelect = document.getElementById('monthFilter');
         let currentSelected = filterSelect.value;
@@ -169,35 +167,32 @@
         let monthsSet = new Set();
         currentRecords.forEach(r => {
             if(r.date) {
-                monthsSet.add(r.date.substring(0, 7)); // 'YYYY-MM' (e.g., '2026-09') ကို ဖြတ်ယူခြင်း
+                monthsSet.add(r.date.substring(0, 7)); 
             }
         });
         
-        let sortedMonths = Array.from(monthsSet).sort().reverse(); // အသစ်ဆုံးလကို အပေါ်ထားရန်
+        let sortedMonths = Array.from(monthsSet).sort().reverse(); 
         
         let html = `<option value="all">လအားလုံး ပြမည်</option>`;
         sortedMonths.forEach(m => {
             let dateObj = new Date(m + '-01');
-            let displayString = dateObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); // ဥပမာ - Sep 2026
+            let displayString = dateObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); 
             html += `<option value="${m}">${displayString}</option>`;
         });
         
         filterSelect.innerHTML = html;
         
-        // ယခင်ရွေးထားသော လရှိပါက ဆက်လက်ထိန်းသိမ်းထားရန်
         if (sortedMonths.includes(currentSelected) || currentSelected === 'all') {
             filterSelect.value = currentSelected;
         }
     }
 
-    // Filter လုပ်ပြီး Data များကို ပြသရန် (HTML မှ လှမ်းခေါ်နိုင်ရန် window object တွင် သိမ်းထားပါသည်)
     window.applyFilter = function() {
         let selectedMonth = document.getElementById('monthFilter').value;
         
         if (selectedMonth === 'all') {
             renderUI(currentRecords);
         } else {
-            // ရွေးချယ်ထားသော 'YYYY-MM' နှင့် စတင်သော မှတ်တမ်းများကိုသာ စစ်ထုတ်ခြင်း
             let filteredRecords = currentRecords.filter(r => r.date && r.date.startsWith(selectedMonth));
             renderUI(filteredRecords);
         }
@@ -275,8 +270,22 @@
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'မနက် (🌅)', data: morningData, borderColor: '#0984e3', backgroundColor: '#0984e3', tension: 0.3, spanGaps: true },
-                    { label: 'ည (🌙)', data: nightData, borderColor: '#6c5ce7', backgroundColor: '#6c5ce7', tension: 0.3, spanGaps: true }
+                    { 
+                        label: 'မနက် (🌅)', 
+                        data: morningData, 
+                        borderColor: '#0984e3', 
+                        backgroundColor: '#0984e3', 
+                        tension: 0.3, 
+                        spanGaps: true 
+                    },
+                    { 
+                        label: 'ည (🌙)', 
+                        data: nightData, 
+                        borderColor: '#e84118', // လိမ္မော်နီရောင်သို့ ပြောင်းလဲထားပါသည်
+                        backgroundColor: '#e84118', 
+                        tension: 0.3, 
+                        spanGaps: true 
+                    }
                 ]
             },
             options: { responsive: true, scales: { y: { suggestedMin: 80, suggestedMax: 200 } } }

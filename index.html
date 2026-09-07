@@ -29,7 +29,10 @@
         .filter-section label { color: #0984e3; font-size: 14px; }
         
         /* Summary Boxes */
-        .summary { display: flex; justify-content: space-between; margin-top: 15px; text-align: center; gap: 10px; }
+        .summary-title { font-size: 14px; font-weight: bold; color: #2d3436; margin-top: 20px; border-left: 4px solid; padding-left: 8px; }
+        .title-morning { border-color: #0984e3; }
+        .title-night { border-color: #e84118; }
+        .summary { display: flex; justify-content: space-between; margin-top: 10px; text-align: center; gap: 10px; }
         .box { flex: 1; padding: 10px; border-radius: 8px; color: white; font-size: 13px; }
         .high { background-color: #d63031; }
         .normal { background-color: #00b894; }
@@ -99,11 +102,20 @@
         </select>
     </div>
 
-    <!-- Summary (အတက် / အကျ) -->
+    <!-- မနက်ပိုင်း Summary -->
+    <div class="summary-title title-morning">🌅 မနက်ပိုင်း အခြေအနေ</div>
     <div class="summary">
-        <div class="box high">တက်<span class="count-num" id="highCount">0</span></div>
-        <div class="box normal">ပုံမှန်<span class="count-num" id="normalCount">0</span></div>
-        <div class="box low">ကျ<span class="count-num" id="lowCount">0</span></div>
+        <div class="box high">တက်<span class="count-num" id="mHigh">0</span></div>
+        <div class="box normal">ပုံမှန်<span class="count-num" id="mNormal">0</span></div>
+        <div class="box low">ကျ<span class="count-num" id="mLow">0</span></div>
+    </div>
+
+    <!-- ညပိုင်း Summary -->
+    <div class="summary-title title-night">🌙 ညပိုင်း အခြေအနေ</div>
+    <div class="summary">
+        <div class="box high">တက်<span class="count-num" id="nHigh">0</span></div>
+        <div class="box normal">ပုံမှန်<span class="count-num" id="nNormal">0</span></div>
+        <div class="box low">ကျ<span class="count-num" id="nLow">0</span></div>
     </div>
 
     <!-- ဂရပ်ဖစ် (Graph) -->
@@ -206,14 +218,21 @@
     }
 
     function renderUI(records) {
-        let high = 0, normal = 0, low = 0;
+        let mHigh = 0, mNormal = 0, mLow = 0;
+        let nHigh = 0, nNormal = 0, nLow = 0;
         let groupedData = {};
 
+        // မနက်နဲ့ ည သီးသန့်စီ တွက်ချက်ခြင်း
         records.forEach(record => {
-            let highLimit = record.time === 'morning' ? 130 : 180;
-            if (record.level < 70) low++;
-            else if (record.level > highLimit) high++;
-            else normal++;
+            if (record.time === 'morning') {
+                if (record.level < 70) mLow++;
+                else if (record.level > 130) mHigh++;
+                else mNormal++;
+            } else {
+                if (record.level < 70) nLow++;
+                else if (record.level > 180) nHigh++;
+                else nNormal++;
+            }
 
             if (!groupedData[record.date]) {
                 groupedData[record.date] = { morning: null, night: null };
@@ -221,20 +240,24 @@
             groupedData[record.date][record.time] = record.level; 
         });
 
+        // တွက်ထားသော ရလဒ်များကို မျက်နှာပြင်တွင် ပြသခြင်း
+        document.getElementById('mHigh').innerText = mHigh;
+        document.getElementById('mNormal').innerText = mNormal;
+        document.getElementById('mLow').innerText = mLow;
+
+        document.getElementById('nHigh').innerText = nHigh;
+        document.getElementById('nNormal').innerText = nNormal;
+        document.getElementById('nLow').innerText = nLow;
+
         let sortedDates = Object.keys(groupedData).sort((a, b) => new Date(b) - new Date(a));
-        
-        document.getElementById('highCount').innerText = high;
-        document.getElementById('normalCount').innerText = normal;
-        document.getElementById('lowCount').innerText = low;
-        
         let historyHTML = '';
+        
         sortedDates.forEach(date => {
             let dayData = groupedData[date];
             let mData = checkStatus(dayData.morning, 'morning');
             let nData = checkStatus(dayData.night, 'night');
 
             let d = new Date(date);
-            // လနာမည် အတိုကောက်ဖြင့် ရက်စွဲကို ပြောင်းလဲခြင်း (ဥပမာ - 7 Sep)
             let dateString = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
             let mActions = dayData.morning ? `<div class="actions"><span class="icon-btn" title="ပြင်မည်" onclick="editRecord('${date}', 'morning', ${dayData.morning})">✏️</span> <span class="icon-btn" title="ဖျက်မည်" onclick="deleteRecord('${date}', 'morning')">🗑️</span></div>` : '';
@@ -257,7 +280,6 @@
 
         chartDates.forEach(date => {
             let d = new Date(date);
-            // ဂရပ်ရှိ လေဘယ်များကိုလည်း လနာမည် အတိုကောက်ဖြင့် ပြောင်းလဲခြင်း
             labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
             morningData.push(groupedData[date].morning);
             nightData.push(groupedData[date].night);

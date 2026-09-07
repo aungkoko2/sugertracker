@@ -24,8 +24,12 @@
         .btn-export { flex: 1; padding: 10px; background-color: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .btn-import { flex: 1; padding: 10px; background-color: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
         
+        /* Filter Section */
+        .filter-section { margin-top: 25px; padding: 15px; background-color: #e8f4f8; border-radius: 8px; border: 1px solid #d1e8ee; }
+        .filter-section label { color: #0984e3; font-size: 14px; }
+        
         /* Summary Boxes */
-        .summary { display: flex; justify-content: space-between; margin-top: 25px; text-align: center; gap: 10px; }
+        .summary { display: flex; justify-content: space-between; margin-top: 15px; text-align: center; gap: 10px; }
         .box { flex: 1; padding: 10px; border-radius: 8px; color: white; font-size: 13px; }
         .high { background-color: #d63031; }
         .normal { background-color: #00b894; }
@@ -59,6 +63,7 @@
     <h2>ဆီးချိုမှတ်တမ်း 📝</h2>
     <div id="syncStatus">🟢 Cloud ဖြင့် ချိတ်ဆက်ထားပါသည်</div>
     
+    <!-- စာရင်းသွင်းရန် အပိုင်း -->
     <div class="input-group">
         <div>
             <label>ရက်စွဲ</label>
@@ -80,24 +85,35 @@
     
     <button class="btn-main" onclick="saveRecord()">မှတ်သားမည်</button>
 
-    <!-- ပြန်ထည့်ပေးထားသော Backup & Restore Buttons -->
     <div class="backup-group">
         <button class="btn-export" onclick="exportData()">💾 ဒေတာ သိမ်းမည်</button>
         <button class="btn-import" onclick="document.getElementById('importFile').click()">📂 ဖိုင်မှ ပြန်ထည့်မည်</button>
         <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
     </div>
 
+    <!-- လအလိုက် စစ်ထုတ်ကြည့်ရန် (Filter Section) -->
+    <div class="filter-section">
+        <label>📅 လအလိုက် ကြည့်ရန်:</label>
+        <select id="monthFilter" onchange="applyFilter()">
+            <option value="all">လအားလုံး ပြမည်</option>
+            <!-- ဒေတာရှိသော လများကို အလိုအလျောက် ဤနေရာတွင် ထည့်ပေးပါမည် -->
+        </select>
+    </div>
+
+    <!-- Summary (အတက် / အကျ) -->
     <div class="summary">
         <div class="box high">တက်<span class="count-num" id="highCount">0</span></div>
         <div class="box normal">ပုံမှန်<span class="count-num" id="normalCount">0</span></div>
         <div class="box low">ကျ<span class="count-num" id="lowCount">0</span></div>
     </div>
 
-    <div class="section-title">📊 တစ်လစာ အတက်အကျ အခြေအနေ</div>
+    <!-- ဂရပ်ဖစ် (Graph) -->
+    <div class="section-title">📊 အတက်အကျ အခြေအနေ</div>
     <div class="chart-container">
         <canvas id="sugarChart"></canvas>
     </div>
 
+    <!-- ဇယား (Table) -->
     <div class="section-title">📅 နေ့စဉ် ဇယား</div>
     <table>
         <thead>
@@ -113,7 +129,7 @@
     </table>
 </div>
 
-<!-- Firebase ကို ချိတ်ဆက်ရန် Module Script -->
+<!-- Firebase Module Script -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -133,7 +149,7 @@
 
     document.getElementById('dateInput').valueAsDate = new Date();
     let myChart = null; 
-    let currentRecords = []; // Export လုပ်ရန် Data များကို ယာယီသိမ်းထားမည့် နေရာ
+    let currentRecords = []; // Database မှ ဒေတာအကုန်
 
     // Firebase မှ Data များကို အလိုအလျောက် ရယူခြင်း
     onValue(recordsRef, (snapshot) => {
@@ -141,8 +157,51 @@
         snapshot.forEach((childSnapshot) => {
             currentRecords.push(childSnapshot.val());
         });
-        renderUI(currentRecords);
+        updateFilterDropdown(); // Dropdown တွင် လများ အလိုအလျောက် ထည့်ပေးရန်
+        applyFilter(); // ရွေးချယ်ထားသောလအလိုက် ပြသရန်
     });
+
+    // Dropdown အတွက် သက်ဆိုင်ရာ လများကို ရှာထုတ်ခြင်း
+    function updateFilterDropdown() {
+        let filterSelect = document.getElementById('monthFilter');
+        let currentSelected = filterSelect.value;
+        
+        let monthsSet = new Set();
+        currentRecords.forEach(r => {
+            if(r.date) {
+                monthsSet.add(r.date.substring(0, 7)); // 'YYYY-MM' (e.g., '2026-09') ကို ဖြတ်ယူခြင်း
+            }
+        });
+        
+        let sortedMonths = Array.from(monthsSet).sort().reverse(); // အသစ်ဆုံးလကို အပေါ်ထားရန်
+        
+        let html = `<option value="all">လအားလုံး ပြမည်</option>`;
+        sortedMonths.forEach(m => {
+            let dateObj = new Date(m + '-01');
+            let displayString = dateObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); // ဥပမာ - Sep 2026
+            html += `<option value="${m}">${displayString}</option>`;
+        });
+        
+        filterSelect.innerHTML = html;
+        
+        // ယခင်ရွေးထားသော လရှိပါက ဆက်လက်ထိန်းသိမ်းထားရန်
+        if (sortedMonths.includes(currentSelected) || currentSelected === 'all') {
+            filterSelect.value = currentSelected;
+        }
+    }
+
+    // Filter လုပ်ပြီး Data များကို ပြသရန် (HTML မှ လှမ်းခေါ်နိုင်ရန် window object တွင် သိမ်းထားပါသည်)
+    window.applyFilter = function() {
+        let selectedMonth = document.getElementById('monthFilter').value;
+        
+        if (selectedMonth === 'all') {
+            renderUI(currentRecords);
+        } else {
+            // ရွေးချယ်ထားသော 'YYYY-MM' နှင့် စတင်သော မှတ်တမ်းများကိုသာ စစ်ထုတ်ခြင်း
+            let filteredRecords = currentRecords.filter(r => r.date && r.date.startsWith(selectedMonth));
+            renderUI(filteredRecords);
+        }
+    };
     
     function checkStatus(level, time) {
         if (!level) return { text: '-', class: 'td-none' };
@@ -224,7 +283,7 @@
         });
     }
 
-    // HTML မှ တိုက်ရိုက်ခေါ်သုံးနိုင်ရန်
+    // --- HTML မှ တိုက်ရိုက်ခေါ်သုံးမည့် Functions များ ---
     window.saveRecord = function() {
         let date = document.getElementById('dateInput').value;
         let time = document.getElementById('timeInput').value;
@@ -272,7 +331,6 @@
         }
     }
 
-    // --- Firebase မှ Data များကို Export ဆွဲထုတ်ခြင်း ---
     window.exportData = function() {
         if (currentRecords.length === 0) {
             alert('သိမ်းဆည်းရန် မှတ်တမ်း မရှိသေးပါ။');
@@ -288,7 +346,6 @@
         document.body.removeChild(a);
     }
 
-    // --- ဖိုင်ထဲမှ Data များကို Firebase သို့ Import ပြန်သွင်းခြင်း ---
     window.importData = function(event) {
         let file = event.target.files[0];
         if (!file) return;
@@ -298,7 +355,6 @@
             try {
                 let importedData = JSON.parse(e.target.result);
                 if (Array.isArray(importedData)) {
-                    // Firebase ထဲသို့ တစ်ခုချင်းစီ Loop ပတ်ပြီး ထည့်သွင်းခြင်း
                     importedData.forEach(record => {
                         if(record.date && record.time && record.level) {
                             let recordId = record.date + '_' + record.time;
@@ -309,7 +365,7 @@
                             });
                         }
                     });
-                    alert('ဒေတာများကို အောင်မြင်စွာ ပြန်လည်ထည့်သွင်းပြီးပါပြီ။ Cloud ပေါ်သို့ တင်နေပါသည်။');
+                    alert('ဒေတာများကို အောင်မြင်စွာ ပြန်လည်ထည့်သွင်းပြီးပါပြီ။');
                 } else {
                     alert('ဖိုင်အမျိုးအစား မှားယွင်းနေပါသည်။ (မှန်ကန်သော Backup ဖိုင် မဟုတ်ပါ)');
                 }
@@ -318,7 +374,7 @@
             }
         };
         reader.readAsText(file);
-        event.target.value = ''; // နောက်တစ်ကြိမ် ထပ်ရွေးလို့ရအောင် Reset လုပ်ခြင်း
+        event.target.value = ''; 
     }
 </script>
 

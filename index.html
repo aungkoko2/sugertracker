@@ -10,25 +10,27 @@
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0px 4px 15px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #2c3e50; margin-top: 0; font-size: 22px; }
         
+        /* Login UI Styles */
+        #loginSection { text-align: center; margin-top: 50px; }
+        .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0px 4px 15px rgba(0,0,0,0.05); display: inline-block; width: 100%; max-width: 300px; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        
         .input-group { display: flex; gap: 10px; margin-top: 15px; }
         .input-group > div { flex: 1; }
         label { font-weight: bold; color: #34495e; display: block; font-size: 13px; margin-bottom: 5px; }
         input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #dcdde1; box-sizing: border-box; font-size: 15px; }
         
-        /* Buttons */
         .btn-main { width: 100%; padding: 12px; background-color: #0984e3; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         .btn-main:hover { background-color: #74b9ff; }
+        .btn-logout { background-color: #e74c3c; margin-top: 10px; font-size: 14px; padding: 10px; }
         
-        /* Import / Export Buttons */
         .backup-group { display: flex; gap: 10px; margin-top: 15px; }
         .btn-export { flex: 1; padding: 10px; background-color: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .btn-import { flex: 1; padding: 10px; background-color: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
         
-        /* Filter Section */
         .filter-section { margin-top: 25px; padding: 15px; background-color: #e8f4f8; border-radius: 8px; border: 1px solid #d1e8ee; }
         .filter-section label { color: #0984e3; font-size: 14px; }
         
-        /* Summary Boxes */
         .summary-title { font-size: 14px; font-weight: bold; color: #2d3436; margin-top: 20px; border-left: 4px solid; padding-left: 8px; }
         .title-morning { border-color: #0984e3; }
         .title-night { border-color: #e84118; }
@@ -39,7 +41,6 @@
         .low { background-color: #fdcb6e; color: #2d3436; }
         .count-num { font-size: 20px; font-weight: bold; display: block; margin-top: 5px; }
 
-        /* Graph & Table */
         .section-title { font-size: 16px; color: #2d3436; margin: 25px 0 10px 0; font-weight: bold; border-left: 4px solid #0984e3; padding-left: 8px; }
         .chart-container { background: #fff; border: 1px solid #dfe6e9; border-radius: 8px; padding: 10px; }
         
@@ -51,22 +52,30 @@
         .td-normal { color: #00b894; font-weight: bold; }
         .td-none { color: #b2bec3; font-size: 13px; }
         
-        /* Edit & Delete Action Icons */
         .actions { margin-top: 8px; display: flex; justify-content: center; gap: 10px; }
         .icon-btn { cursor: pointer; font-size: 14px; transition: transform 0.2s; user-select: none; }
         .icon-btn:hover { transform: scale(1.3); }
         
-        /* Loading Text */
         #syncStatus { text-align: center; font-size: 12px; color: #27ae60; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- Login Section -->
+<div id="loginSection">
+    <h2>🔒 အကောင့်ဝင်ရန်</h2>
+    <div class="login-box">
+        <input type="email" id="loginEmail" class="login-input" placeholder="အီးမေးလ် ထည့်ပါ">
+        <input type="password" id="loginPassword" class="login-input" placeholder="စကားဝှက် ထည့်ပါ">
+        <button class="btn-main" onclick="login()">ဝင်မည်</button>
+    </div>
+</div>
+
+<!-- Main App Section (အစတွင် ဖျောက်ထားပါမည်) -->
+<div id="appSection" class="container" style="display: none;">
     <h2>ဆီးချိုမှတ်တမ်း 📝</h2>
     <div id="syncStatus">🟢 Cloud ဖြင့် ချိတ်ဆက်ထားပါသည်</div>
     
-    <!-- စာရင်းသွင်းရန် အပိုင်း -->
     <div class="input-group">
         <div>
             <label>ရက်စွဲ</label>
@@ -94,7 +103,6 @@
         <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
     </div>
 
-    <!-- လအလိုက် စစ်ထုတ်ကြည့်ရန် (Filter Section) -->
     <div class="filter-section">
         <label>📅 လအလိုက် ကြည့်ရန်:</label>
         <select id="monthFilter" onchange="applyFilter()">
@@ -102,7 +110,6 @@
         </select>
     </div>
 
-    <!-- မနက်ပိုင်း Summary -->
     <div class="summary-title title-morning">🌅 မနက်ပိုင်း အခြေအနေ</div>
     <div class="summary">
         <div class="box high">တက်<span class="count-num" id="mHigh">0</span></div>
@@ -110,7 +117,6 @@
         <div class="box low">ကျ<span class="count-num" id="mLow">0</span></div>
     </div>
 
-    <!-- ညပိုင်း Summary -->
     <div class="summary-title title-night">🌙 ညပိုင်း အခြေအနေ</div>
     <div class="summary">
         <div class="box high">တက်<span class="count-num" id="nHigh">0</span></div>
@@ -118,13 +124,11 @@
         <div class="box low">ကျ<span class="count-num" id="nLow">0</span></div>
     </div>
 
-    <!-- ဂရပ်ဖစ် (Graph) -->
     <div class="section-title">📊 အတက်အကျ အခြေအနေ</div>
     <div class="chart-container">
         <canvas id="sugarChart"></canvas>
     </div>
 
-    <!-- ဇယား (Table) -->
     <div class="section-title">📅 နေ့စဉ် ဇယား</div>
     <table>
         <thead>
@@ -138,12 +142,16 @@
             <!-- မှတ်တမ်းများ ဒီနေရာတွင် ပေါ်လာပါမည် -->
         </tbody>
     </table>
+    
+    <!-- Logout Button -->
+    <button class="btn-main btn-logout" onclick="logout()">🚪 အကောင့်မှ ထွက်မည်</button>
 </div>
 
 <!-- Firebase Module Script -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDuuF-9P_zv_At-2ix_ZKLHmksHSy_hod4",
@@ -156,20 +164,50 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
     const recordsRef = ref(db, 'sugarRecords');
 
     document.getElementById('dateInput').valueAsDate = new Date();
     let myChart = null; 
     let currentRecords = []; 
 
-    onValue(recordsRef, (snapshot) => {
-        currentRecords = [];
-        snapshot.forEach((childSnapshot) => {
-            currentRecords.push(childSnapshot.val());
-        });
-        updateFilterDropdown(); 
-        applyFilter(); 
+    // --- Authentication (Login/Logout Check) ---
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // လော့အင် ဝင်ထားလျှင် App ကိုပြပါ
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('appSection').style.display = 'block';
+            fetchData(); // ဒေတာများ ဆွဲယူပါ
+        } else {
+            // လော့အင် မဝင်ထားလျှင် Login ကိုသာ ပြပါ
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('appSection').style.display = 'none';
+        }
     });
+
+    window.login = function() {
+        let email = document.getElementById('loginEmail').value;
+        let password = document.getElementById('loginPassword').value;
+        signInWithEmailAndPassword(auth, email, password)
+            .then(() => { alert("အကောင့်ဝင်ခြင်း အောင်မြင်ပါသည်။"); })
+            .catch((error) => { alert("အီးမေးလ် သို့မဟုတ် စကားဝှက် မှားယွင်းနေပါသည်။"); });
+    };
+
+    window.logout = function() {
+        signOut(auth).then(() => { alert("အကောင့်မှ ထွက်ပြီးပါပြီ။"); });
+    };
+
+    // --- Fetch Data ---
+    function fetchData() {
+        onValue(recordsRef, (snapshot) => {
+            currentRecords = [];
+            snapshot.forEach((childSnapshot) => {
+                currentRecords.push(childSnapshot.val());
+            });
+            updateFilterDropdown(); 
+            applyFilter(); 
+        });
+    }
 
     function updateFilterDropdown() {
         let filterSelect = document.getElementById('monthFilter');
@@ -177,33 +215,24 @@
         
         let monthsSet = new Set();
         currentRecords.forEach(r => {
-            if(r.date) {
-                monthsSet.add(r.date.substring(0, 7)); 
-            }
+            if(r.date) monthsSet.add(r.date.substring(0, 7)); 
         });
         
         let sortedMonths = Array.from(monthsSet).sort().reverse(); 
-        
         let html = `<option value="all">လအားလုံး ပြမည်</option>`;
         sortedMonths.forEach(m => {
             let dateObj = new Date(m + '-01');
             let displayString = dateObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); 
             html += `<option value="${m}">${displayString}</option>`;
         });
-        
         filterSelect.innerHTML = html;
-        
-        if (sortedMonths.includes(currentSelected) || currentSelected === 'all') {
-            filterSelect.value = currentSelected;
-        }
+        if (sortedMonths.includes(currentSelected) || currentSelected === 'all') filterSelect.value = currentSelected;
     }
 
     window.applyFilter = function() {
         let selectedMonth = document.getElementById('monthFilter').value;
-        
-        if (selectedMonth === 'all') {
-            renderUI(currentRecords);
-        } else {
+        if (selectedMonth === 'all') renderUI(currentRecords);
+        else {
             let filteredRecords = currentRecords.filter(r => r.date && r.date.startsWith(selectedMonth));
             renderUI(filteredRecords);
         }
@@ -222,29 +251,19 @@
         let nHigh = 0, nNormal = 0, nLow = 0;
         let groupedData = {};
 
-        // မနက်နဲ့ ည သီးသန့်စီ တွက်ချက်ခြင်း
         records.forEach(record => {
             if (record.time === 'morning') {
-                if (record.level < 70) mLow++;
-                else if (record.level > 130) mHigh++;
-                else mNormal++;
+                if (record.level < 70) mLow++; else if (record.level > 130) mHigh++; else mNormal++;
             } else {
-                if (record.level < 70) nLow++;
-                else if (record.level > 180) nHigh++;
-                else nNormal++;
+                if (record.level < 70) nLow++; else if (record.level > 180) nHigh++; else nNormal++;
             }
-
-            if (!groupedData[record.date]) {
-                groupedData[record.date] = { morning: null, night: null };
-            }
+            if (!groupedData[record.date]) groupedData[record.date] = { morning: null, night: null };
             groupedData[record.date][record.time] = record.level; 
         });
 
-        // တွက်ထားသော ရလဒ်များကို မျက်နှာပြင်တွင် ပြသခြင်း
         document.getElementById('mHigh').innerText = mHigh;
         document.getElementById('mNormal').innerText = mNormal;
         document.getElementById('mLow').innerText = mLow;
-
         document.getElementById('nHigh').innerText = nHigh;
         document.getElementById('nNormal').innerText = nNormal;
         document.getElementById('nLow').innerText = nLow;
@@ -256,7 +275,6 @@
             let dayData = groupedData[date];
             let mData = checkStatus(dayData.morning, 'morning');
             let nData = checkStatus(dayData.night, 'night');
-
             let d = new Date(date);
             let dateString = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
@@ -272,7 +290,6 @@
         });
         document.getElementById('historyLog').innerHTML = historyHTML;
 
-        // Graph
         let chartDates = [...sortedDates].reverse(); 
         let labels = [];
         let morningData = [];
@@ -286,102 +303,62 @@
         });
 
         if (myChart) myChart.destroy(); 
-        
         let ctx = document.getElementById('sugarChart').getContext('2d');
         myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
-                    { 
-                        label: 'မနက် (🌅)', 
-                        data: morningData, 
-                        borderColor: '#0984e3', 
-                        backgroundColor: '#0984e3', 
-                        tension: 0.3, 
-                        spanGaps: true 
-                    },
-                    { 
-                        label: 'ည (🌙)', 
-                        data: nightData, 
-                        borderColor: '#e84118', 
-                        backgroundColor: '#e84118', 
-                        tension: 0.3, 
-                        spanGaps: true 
-                    }
+                    { label: 'မနက် (🌅)', data: morningData, borderColor: '#0984e3', backgroundColor: '#0984e3', tension: 0.3, spanGaps: true },
+                    { label: 'ည (🌙)', data: nightData, borderColor: '#e84118', backgroundColor: '#e84118', tension: 0.3, spanGaps: true }
                 ]
             },
             options: { responsive: true, scales: { y: { suggestedMin: 80, suggestedMax: 200 } } }
         });
     }
 
-    // --- HTML မှ တိုက်ရိုက်ခေါ်သုံးမည့် Functions များ ---
+    // --- Data Operations ---
     window.saveRecord = function() {
         let date = document.getElementById('dateInput').value;
         let time = document.getElementById('timeInput').value;
         let level = document.getElementById('sugarInput').value;
 
-        if (!level) {
-            alert('ကျေးဇူးပြု၍ ဆီးချိုပမာဏကို ထည့်ပါ။');
-            return;
-        }
-
+        if (!level) return alert('ကျေးဇူးပြု၍ ဆီးချိုပမာဏကို ထည့်ပါ။');
         let recordId = date + '_' + time;
-        set(ref(db, 'sugarRecords/' + recordId), {
-            date: date,
-            time: time,
-            level: parseInt(level)
-        }).then(() => {
-            document.getElementById('sugarInput').value = '';
-        });
+        set(ref(db, 'sugarRecords/' + recordId), { date: date, time: time, level: parseInt(level) })
+        .then(() => document.getElementById('sugarInput').value = '');
     };
 
     window.editRecord = function(date, time, oldLevel) {
         let timeLabel = time === 'morning' ? "မနက်ပိုင်း" : "ညပိုင်း";
         let newValue = prompt(`📅 ${date} (${timeLabel})\nဆီးချိုပမာဏ အသစ်ကို ရိုက်ထည့်ပါ:`, oldLevel);
-        
         if (newValue !== null && newValue.trim() !== "") {
             let parsedValue = parseInt(newValue);
             if (!isNaN(parsedValue)) {
-                let recordId = date + '_' + time;
-                set(ref(db, 'sugarRecords/' + recordId), {
-                    date: date,
-                    time: time,
-                    level: parsedValue
-                });
-            } else {
-                alert("ကျေးဇူးပြု၍ ဂဏန်းသာ ရိုက်ထည့်ပါ။");
-            }
+                set(ref(db, 'sugarRecords/' + date + '_' + time), { date: date, time: time, level: parsedValue });
+            } else alert("ကျေးဇူးပြု၍ ဂဏန်းသာ ရိုက်ထည့်ပါ။");
         }
     }
 
     window.deleteRecord = function(date, time) {
         let timeLabel = time === 'morning' ? "မနက်ပိုင်း" : "ညပိုင်း";
         if (confirm(`📅 ${date} (${timeLabel}) မှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား?`)) {
-            let recordId = date + '_' + time;
-            remove(ref(db, 'sugarRecords/' + recordId));
+            remove(ref(db, 'sugarRecords/' + date + '_' + time));
         }
     }
 
     window.exportData = function() {
-        if (currentRecords.length === 0) {
-            alert('သိမ်းဆည်းရန် မှတ်တမ်း မရှိသေးပါ။');
-            return;
-        }
+        if (currentRecords.length === 0) return alert('သိမ်းဆည်းရန် မှတ်တမ်း မရှိသေးပါ။');
         let blob = new Blob([JSON.stringify(currentRecords)], { type: 'application/json' });
         let url = URL.createObjectURL(blob);
         let a = document.createElement('a');
-        a.href = url;
-        a.download = 'sugar_backup.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        a.href = url; a.download = 'sugar_backup.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 
     window.importData = function(event) {
         let file = event.target.files[0];
         if (!file) return;
-
         let reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -389,21 +366,14 @@
                 if (Array.isArray(importedData)) {
                     importedData.forEach(record => {
                         if(record.date && record.time && record.level) {
-                            let recordId = record.date + '_' + record.time;
-                            set(ref(db, 'sugarRecords/' + recordId), {
-                                date: record.date,
-                                time: record.time,
-                                level: parseInt(record.level)
+                            set(ref(db, 'sugarRecords/' + record.date + '_' + record.time), {
+                                date: record.date, time: record.time, level: parseInt(record.level)
                             });
                         }
                     });
                     alert('ဒေတာများကို အောင်မြင်စွာ ပြန်လည်ထည့်သွင်းပြီးပါပြီ။');
-                } else {
-                    alert('ဖိုင်အမျိုးအစား မှားယွင်းနေပါသည်။ (မှန်ကန်သော Backup ဖိုင် မဟုတ်ပါ)');
-                }
-            } catch (error) {
-                alert('ဖိုင်ဖတ်ရာတွင် အမှားအယွင်းရှိပါသည်။');
-            }
+                } else alert('ဖိုင်အမျိုးအစား မှားယွင်းနေပါသည်။');
+            } catch (error) { alert('ဖိုင်ဖတ်ရာတွင် အမှားအယွင်းရှိပါသည်။'); }
         };
         reader.readAsText(file);
         event.target.value = ''; 

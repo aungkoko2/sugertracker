@@ -19,6 +19,11 @@
         .btn-main { width: 100%; padding: 12px; background-color: #0984e3; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         .btn-main:hover { background-color: #74b9ff; }
         
+        /* Import / Export Buttons */
+        .backup-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-export { flex: 1; padding: 10px; background-color: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-import { flex: 1; padding: 10px; background-color: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        
         /* Summary Boxes */
         .summary { display: flex; justify-content: space-between; margin-top: 25px; text-align: center; gap: 10px; }
         .box { flex: 1; padding: 10px; border-radius: 8px; color: white; font-size: 13px; }
@@ -75,6 +80,13 @@
     
     <button class="btn-main" onclick="saveRecord()">မှတ်သားမည်</button>
 
+    <!-- ပြန်ထည့်ပေးထားသော Backup & Restore Buttons -->
+    <div class="backup-group">
+        <button class="btn-export" onclick="exportData()">💾 ဒေတာ သိမ်းမည်</button>
+        <button class="btn-import" onclick="document.getElementById('importFile').click()">📂 ဖိုင်မှ ပြန်ထည့်မည်</button>
+        <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
+    </div>
+
     <div class="summary">
         <div class="box high">တက်<span class="count-num" id="highCount">0</span></div>
         <div class="box normal">ပုံမှန်<span class="count-num" id="normalCount">0</span></div>
@@ -103,11 +115,9 @@
 
 <!-- Firebase ကို ချိတ်ဆက်ရန် Module Script -->
 <script type="module">
-    // Firebase SDK များကို ခေါ်ယူခြင်း
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    // အစ်ကိုပေးထားသော Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDuuF-9P_zv_At-2ix_ZKLHmksHSy_hod4",
       authDomain: "sugertracker.firebaseapp.com",
@@ -117,21 +127,21 @@
       appId: "1:1085063211290:web:94b4746cbcfcdf849724a3"
     };
 
-    // Firebase ကို စတင်ခြင်း
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const recordsRef = ref(db, 'sugarRecords');
 
     document.getElementById('dateInput').valueAsDate = new Date();
     let myChart = null; 
+    let currentRecords = []; // Export လုပ်ရန် Data များကို ယာယီသိမ်းထားမည့် နေရာ
 
-    // Firebase မှ Data များကို အလိုအလျောက် ရယူခြင်း (Realtime Sync)
+    // Firebase မှ Data များကို အလိုအလျောက် ရယူခြင်း
     onValue(recordsRef, (snapshot) => {
-        let records = [];
+        currentRecords = [];
         snapshot.forEach((childSnapshot) => {
-            records.push(childSnapshot.val());
+            currentRecords.push(childSnapshot.val());
         });
-        renderUI(records);
+        renderUI(currentRecords);
     });
     
     function checkStatus(level, time) {
@@ -185,7 +195,7 @@
         });
         document.getElementById('historyLog').innerHTML = historyHTML;
 
-        // Graph ဆွဲခြင်း
+        // Graph
         let chartDates = [...sortedDates].reverse(); 
         let labels = [];
         let morningData = [];
@@ -214,7 +224,7 @@
         });
     }
 
-    // HTML မှ တိုက်ရိုက်ခေါ်သုံးနိုင်ရန် Window Object သို့ ချိတ်ဆက်ပေးခြင်း
+    // HTML မှ တိုက်ရိုက်ခေါ်သုံးနိုင်ရန်
     window.saveRecord = function() {
         let date = document.getElementById('dateInput').value;
         let time = document.getElementById('timeInput').value;
@@ -225,7 +235,6 @@
             return;
         }
 
-        // Firebase သို့ Data လှမ်းပို့ခြင်း (Unique ID အနေဖြင့် Date_Time ကို သုံးပါသည်)
         let recordId = date + '_' + time;
         set(ref(db, 'sugarRecords/' + recordId), {
             date: date,
@@ -233,8 +242,6 @@
             level: parseInt(level)
         }).then(() => {
             document.getElementById('sugarInput').value = '';
-        }).catch((error) => {
-            alert("Error: ဒေတာသိမ်းဆည်းရာတွင် အမှားအယွင်းဖြစ်နေပါသည်။ Database Rules ကိုစစ်ဆေးပါ။");
         });
     };
 
@@ -263,6 +270,55 @@
             let recordId = date + '_' + time;
             remove(ref(db, 'sugarRecords/' + recordId));
         }
+    }
+
+    // --- Firebase မှ Data များကို Export ဆွဲထုတ်ခြင်း ---
+    window.exportData = function() {
+        if (currentRecords.length === 0) {
+            alert('သိမ်းဆည်းရန် မှတ်တမ်း မရှိသေးပါ။');
+            return;
+        }
+        let blob = new Blob([JSON.stringify(currentRecords)], { type: 'application/json' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'sugar_backup.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // --- ဖိုင်ထဲမှ Data များကို Firebase သို့ Import ပြန်သွင်းခြင်း ---
+    window.importData = function(event) {
+        let file = event.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let importedData = JSON.parse(e.target.result);
+                if (Array.isArray(importedData)) {
+                    // Firebase ထဲသို့ တစ်ခုချင်းစီ Loop ပတ်ပြီး ထည့်သွင်းခြင်း
+                    importedData.forEach(record => {
+                        if(record.date && record.time && record.level) {
+                            let recordId = record.date + '_' + record.time;
+                            set(ref(db, 'sugarRecords/' + recordId), {
+                                date: record.date,
+                                time: record.time,
+                                level: parseInt(record.level)
+                            });
+                        }
+                    });
+                    alert('ဒေတာများကို အောင်မြင်စွာ ပြန်လည်ထည့်သွင်းပြီးပါပြီ။ Cloud ပေါ်သို့ တင်နေပါသည်။');
+                } else {
+                    alert('ဖိုင်အမျိုးအစား မှားယွင်းနေပါသည်။ (မှန်ကန်သော Backup ဖိုင် မဟုတ်ပါ)');
+                }
+            } catch (error) {
+                alert('ဖိုင်ဖတ်ရာတွင် အမှားအယွင်းရှိပါသည်။');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // နောက်တစ်ကြိမ် ထပ်ရွေးလို့ရအောင် Reset လုပ်ခြင်း
     }
 </script>
 

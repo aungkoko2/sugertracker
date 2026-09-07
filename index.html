@@ -96,7 +96,6 @@
         <label>📅 လအလိုက် ကြည့်ရန်:</label>
         <select id="monthFilter" onchange="applyFilter()">
             <option value="all">လအားလုံး ပြမည်</option>
-            <!-- ဒေတာရှိသော လများကို အလိုအလျောက် ဤနေရာတွင် ထည့်ပေးပါမည် -->
         </select>
     </div>
 
@@ -222,11 +221,11 @@
             groupedData[record.date][record.time] = record.level; 
         });
 
+        let sortedDates = Object.keys(groupedData).sort((a, b) => new Date(b) - new Date(a));
+        
         document.getElementById('highCount').innerText = high;
         document.getElementById('normalCount').innerText = normal;
         document.getElementById('lowCount').innerText = low;
-
-        let sortedDates = Object.keys(groupedData).sort((a, b) => new Date(b) - new Date(a));
         
         let historyHTML = '';
         sortedDates.forEach(date => {
@@ -235,7 +234,8 @@
             let nData = checkStatus(dayData.night, 'night');
 
             let d = new Date(date);
-            let dateString = d.getDate() + '/' + (d.getMonth() + 1);
+            // လနာမည် အတိုကောက်ဖြင့် ရက်စွဲကို ပြောင်းလဲခြင်း (ဥပမာ - 7 Sep)
+            let dateString = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
             let mActions = dayData.morning ? `<div class="actions"><span class="icon-btn" title="ပြင်မည်" onclick="editRecord('${date}', 'morning', ${dayData.morning})">✏️</span> <span class="icon-btn" title="ဖျက်မည်" onclick="deleteRecord('${date}', 'morning')">🗑️</span></div>` : '';
             let nActions = dayData.night ? `<div class="actions"><span class="icon-btn" title="ပြင်မည်" onclick="editRecord('${date}', 'night', ${dayData.night})">✏️</span> <span class="icon-btn" title="ဖျက်မည်" onclick="deleteRecord('${date}', 'night')">🗑️</span></div>` : '';
@@ -257,7 +257,8 @@
 
         chartDates.forEach(date => {
             let d = new Date(date);
-            labels.push(d.getDate() + '/' + (d.getMonth() + 1));
+            // ဂရပ်ရှိ လေဘယ်များကိုလည်း လနာမည် အတိုကောက်ဖြင့် ပြောင်းလဲခြင်း
+            labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
             morningData.push(groupedData[date].morning);
             nightData.push(groupedData[date].night);
         });
@@ -281,7 +282,7 @@
                     { 
                         label: 'ည (🌙)', 
                         data: nightData, 
-                        borderColor: '#e84118', // လိမ္မော်နီရောင်သို့ ပြောင်းလဲထားပါသည်
+                        borderColor: '#e84118', 
                         backgroundColor: '#e84118', 
                         tension: 0.3, 
                         spanGaps: true 
